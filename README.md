@@ -1,0 +1,352 @@
+[ef_report_impulsive.html](https://github.com/user-attachments/files/23002955/ef_report_impulsive.html)[Uploading ef_report_impulsive.htm<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>뇌 실행력(EF) 진단 리포트</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+KR:wght@400;700&display=swap');
+        body {
+            font-family: 'Noto Sans KR', 'Inter', sans-serif;
+            background-color: #f7f7f7;
+        }
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            height: 350px;
+            margin: 0 auto;
+        }
+        .tab-content.hidden { display: none; }
+    </style>
+    <!-- Chosen Palette: Warm Neutrals (#F7F7F7, #4B5563) with Primary Blue (#3B82F6) and Accent Teal/Red -->
+    <!-- Application Structure Plan: Dashboard structure with main EF profile visualization (Radar Chart) and tabbed content for solutions (FINGER 5-Areas). This structure is chosen because users need a quick visual summary of their weakness (Radar) followed by detailed, categorized action plans (Tabs). This facilitates active learning and exploration rather than passive reading. -->
+    <!-- Visualization & Content Choices: Radar Chart (Goal: Organize/Compare EF weakness -> Viz: Chart.js Radar -> Interaction: Hover to see score, Tab filter to change content -> Justification: Clearly visualizes multi-factor comparison and shows weak points for personalized targeting.) Stat Cards (Goal: Inform -> Viz: HTML/Tailwind -> Interaction: None -> Justification: Highlighting key takeaways.) Tabbed Interface (Goal: Organize/Inform -> Viz: HTML Tabs + JS -> Interaction: Click to filter detailed content -> Justification: Provides deep, structured information (FINGER routines) without visual clutter.) -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body>
+
+    <div class="main-container bg-white shadow-lg rounded-xl mt-8">
+        <header class="py-8 border-b border-gray-100 text-center">
+            <p id="report-title-prefix" class="text-xl text-gray-500 font-semibold mb-2"></p>
+            <h1 id="report-title" class="text-3xl sm:text-4xl font-extrabold text-gray-800">뇌 실행력(EF) 진단 리포트</h1>
+            <p class="text-gray-500 mt-2 text-lg">브레인 가든 정원쌤이 분석한 님의 맞춤 EF 프로필입니다.</p>
+        </header>
+
+        <section id="profile" class="p-6">
+            <h2 id="user-greeting" class="text-2xl font-bold mb-6 text-gray-700"></h2>
+            
+            <div class="grid md:grid-cols-3 gap-6 mb-8">
+                <!-- Stat Card 1: 진단 유형 -->
+                <div id="type-card" class="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-5 shadow-sm">
+                    <p class="text-sm text-gray-500">진단된 EF 유형</p>
+                    <p id="diagnosed-type" class="text-2xl font-extrabold text-blue-700 mt-1">유형 분석 중...</p>
+                </div>
+                <!-- Stat Card 2: 최저점 -->
+                <div class="bg-red-50 border-l-4 border-red-500 rounded-lg p-5 shadow-sm">
+                    <p class="text-sm text-gray-500">가장 취약한 EF 점수</p>
+                    <p id="weakest-score" class="text-2xl font-extrabold text-red-700 mt-1">N/A</p>
+                </div>
+                <!-- Stat Card 3: 취약 영역 -->
+                <div class="bg-yellow-50 border-l-4 border-yellow-600 rounded-lg p-5 shadow-sm">
+                    <p class="text-sm text-gray-500">가장 취약한 EF 영역</p>
+                    <p id="weakest-area" class="text-2xl font-extrabold text-yellow-700 mt-1">N/A</p>
+                </div>
+            </div>
+
+            <!-- Chart and Interpretation -->
+            <div class="grid lg:grid-cols-2 gap-8 items-start">
+                <div>
+                    <h3 class="text-xl font-bold mb-4 text-gray-700">EF 프로필 레이더 분석</h3>
+                    <p class="text-gray-500 mb-4">4가지 핵심 영역의 상대적인 강도를 시각화했습니다. 점수가 낮을수록 챌린지를 통해 집중적으로 개선해야 할 영역입니다.</p>
+                    <div class="chart-container bg-white p-4 rounded-lg shadow-md">
+                        <canvas id="efRadarChart"></canvas>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold mb-4 text-gray-700">진단 유형별 핵심 해석</h3>
+                    <div id="interpretation-box" class="space-y-4 text-gray-600 border-l-4 border-gray-200 pl-4 py-2">
+                        <p id="problem-area" class="font-semibold text-lg text-red-600">문제점: N/A</p>
+                        <p id="problem-detail">현재 님의 EF 프로필을 분석 중입니다.</p>
+                        <p id="solution-detail" class="text-blue-600 pt-2 font-semibold">솔루션: N/A</p>
+                    </div>
+
+                    <div class="mt-6 bg-gray-50 p-4 rounded-lg">
+                        <p class="text-sm text-gray-600 font-semibold mb-2">⭐ 코치 COMMENT</p>
+                        <p id="coach-comment" class="text-gray-700 text-sm italic">EF는 훈련을 통해 강화될 수 있습니다. 님의 강점을 활용하여 약점을 극복하는 맞춤 전략이 필요합니다.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="solution" class="p-6 mt-8 border-t border-gray-100">
+            <h2 class="text-2xl font-bold mb-6 text-gray-700">유형별 FINGER 맞춤 루틴 목표</h2>
+            <p class="text-gray-500 mb-6">진단된 EF 유형에 맞춰, 치매 예방의 국제 표준인 FINGER 모델 기반의 5대 영역별 **핵심 루틴 목표**를 제시합니다. 챌린지에서는 이 목표를 달성할 **4주 실행 스케줄**을 제공합니다.</p>
+
+            <!-- Tabs Navigation -->
+            <div class="flex flex-wrap border-b border-gray-200">
+                <button data-tab="food" class="tab-button px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-t-lg transition duration-150">🥗 식단 및 영양</button>
+                <button data-tab="move" class="tab-button px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100 transition duration-150 border-x border-gray-200">💪 신체 활동</button>
+                <button data-tab="intellectual" class="tab-button px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100 transition duration-150 border-r border-gray-200">🧩 인지 활동</button>
+                <button data-tab="social" class="tab-button px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100 transition duration-150 border-r border-gray-200">💬 사회 활동</button>
+                <button data-tab="risk" class="tab-button px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100 transition duration-150">❤️ 위험 요인 관리</button>
+            </div>
+
+            <!-- Tabs Content -->
+            <div id="tab-contents" class="p-6 bg-white border border-t-0 border-gray-200 rounded-b-lg shadow-md">
+                <!-- Content will be injected here -->
+                <div id="food" class="tab-content"></div>
+                <div id="move" class="tab-content hidden"></div>
+                <div id="intellectual" class="tab-content hidden"></div>
+                <div id="social" class="tab-content hidden"></div>
+                <div id="risk" class="tab-content hidden"></div>
+            </div>
+        </section>
+
+        <section id="disclaimer" class="p-6 mt-8 bg-gray-50 rounded-b-xl border-t border-gray-100">
+            <h3 class="text-lg font-bold mb-4 text-gray-700 border-l-4 border-yellow-500 pl-3">⚠️ 진단 테스트 유의사항 및 면책 고지</h3>
+            <div class="text-sm text-gray-600 space-y-3">
+                <p><strong>진단 목적의 한계:</strong> 본 테스트 결과는 의학적인 진단, 치료, 또는 전문가의 소견을 대체할 수 없습니다. 만약 심각한 인지적 어려움이나 정서적 문제가 의심되는 경우, 반드시 전문 의료기관을 방문하시기 바랍니다.</p>
+                <p><strong>데이터 기반 분석:</strong> 본 리포트는 응답하신 12개 문항의 EF 영역별 점수를 기반으로 '가장 취약한 행동 패턴'을 진단하여 유형을 분류합니다. 따라서 개인의 주관적인 컨디션이나 복합적인 심리적 요인이 모두 반영되지 않을 수 있습니다. (심화 유료 버전은 더 자세한 문항과 전화 상담으로 보다 섬세하게 반영)</p>
+                <p><strong>정보의 활용:</strong> 리포트에 제시된 FINGER 루틴 및 코칭 메시지는 건강한 습관 형성을 위한 가이드라인이며, 이를 활용하여 발생하는 결과에 대해 브레인 가든은 법적 책임을 지지 않습니다.</p>
+            </div>
+        </section>
+
+        <section id="cta" class="p-6 text-center bg-blue-600 rounded-b-xl mt-8">
+            <h3 class="text-2xl font-extrabold text-white mb-3">🔥 님의 진단 결과를 '평생 습관'으로 바꾸세요!</h3>
+            <p class="text-white text-lg mb-6">무료 진단은 시작일 뿐입니다. **4주 챌린지**를 통해 님의 유형에 딱 맞는 **'실행력이 작동하는 4주 스케줄표'**를 완성하세요.</p>
+            <a href="#" class="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-3 px-8 rounded-full text-lg shadow-lg transition transform hover:scale-105" onclick="alert('챌린지 상세 페이지 링크를 삽입하세요.'); return false;">
+                ⚡ 4주 챌린지 실행 스케줄 확인 및 등록하기
+            </a>
+        </section>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+
+            // 1. URL 파라미터에서 데이터 가져오기 (오류 방지 코드 포함)
+            const nameParam = urlParams.get('n');
+            const name = nameParam ? decodeURIComponent(nameParam) + '님을 위한 ' : '';
+
+            const rScore = parseFloat(urlParams.get('r')) || 3.0; // 억제 통제
+            const sScore = parseFloat(urlParams.get('s')) || 3.0; // 작업 기억
+            const tScore = parseFloat(urlParams.get('t')) || 3.0; // 인지 유연성
+            const uScore = parseFloat(urlParams.get('u')) || 3.0; // 계획/조직
+            const type = urlParams.get('type') ? decodeURIComponent(urlParams.get('type')) : '유형 분석 중';
+            
+            // 2. 이름 및 제목 출력
+            document.getElementById('report-title-prefix').textContent = name;
+            document.getElementById('user-greeting').innerHTML = `님의 뇌는 <span class="text-blue-600">${type}</span>으로 진단되었습니다.`;
+            document.getElementById('diagnosed-type').textContent = type.replace(/[^가-힣\s]/g, ''); // 이모티콘 제거 후 순수 텍스트만
+
+            // 3. EF 데이터 및 유형별 루틴 데이터
+            const scores = [rScore, uScore, tScore, sScore]; // 레이더 차트 순서: R, U, T, S (억제, 계획, 유연성, 기억)
+            const areaLabels = ['억제 통제', '계획/조직', '인지 유연성', '작업 기억'];
+            const areas = ['억제 통제', '계획/조직', '인지 유연성', '작업 기억'];
+
+            // 4. 최저점 계산 (진단 로직)
+            let minScore = 5.0;
+            let weakestArea = '전체 양호';
+
+            // R, S, T 세 영역만으로 최저점 비교
+            const coreScores = [rScore, sScore, tScore];
+            const coreAreas = ['억제 통제', '작업 기억', '인지 유연성'];
+
+            coreScores.forEach((score, index) => {
+                // 소수점 2자리에서 비교 (스프레드시트와 동일하게)
+                const roundedScore = Math.round(score * 100) / 100; 
+
+                if (roundedScore < minScore) {
+                    minScore = roundedScore;
+                    weakestArea = coreAreas[index];
+                }
+            });
+
+            // 5. EF 유형별 해설 및 루틴 데이터 (컨텐츠 파일 기반)
+            const efData = [
+                {
+                    // V열 진단: ⚡️ 감정적 미루기형 (R열 최저) -> C형 루틴 적용
+                    name: '⚡️ 감정적 미루기형',
+                    key: 'EMOTIONAL_AVOIDANCE',
+                    fingerType: 'C형: 감정적 변화형', // FINGER 루틴 파일에서 C형 데이터 사용
+                    weakness: '실행 방해 (억제 통제)',
+                    problemDetail: '님은 **실행력이 부족하고 미루는** 경향이 있습니다. 특히 **불안, 두려움, 스트레스** 같은 **감정적 충동**이 실행을 막고 회피하게 만듭니다. 계획은 잘 세우지만, 행동으로 옮기는 순간 브레이크가 걸립니다.',
+                    solutionDetail: '**\'감정 기반의 실행 브레이크\' 훈련**이 시급합니다. 충동적 회피 대신 **\'3초 STOP 호흡법\'**과 **스트레스 관리 중심**의 루틴을 학습하여, 감정이 행동을 지배하지 않도록 뇌를 훈련해야 합니다.',
+                    coachComment: '님의 문제는 의지력 부족이 아니라 **감정적 회피 패턴**입니다. 챌린지는 이 패턴을 끊고 실행력을 강화하는 데 집중합니다.',
+                    routines: {
+                        food: '### 기본 원칙: 혈당 안정화 & 감정 조절 식단\n- **소량 다빈도 식사** (하루 5-6회)를 통해 혈당 변동을 최소화하여 감정 기복을 줄입니다.\n- **핵심 영양소:** 마그네슘, 오메가-3, 비타민 B군 등 감정 조절에 도움을 주는 음식을 집중적으로 섭취합니다.\n- **피할 것:** 카페인, 정제 설탕, 알코올 등 감정을 불안정하게 만드는 요소는 최소화합니다.',
+                        move: '### 목표: 스트레스 해소 & 감정 안정\n- **마음챙김 운동 (필수):** 매일 아침 호흡 명상과 요가 스트레칭으로 자율신경계를 안정시킵니다.\n- **즉각적 운동:** 스트레스를 느낄 때 즉시 **3초 STOP 호흡법**과 함께 제자리 뛰기 등 짧고 강한 움직임으로 감정을 배출합니다.\n- **주 3회 유산소:** 빠르게 걷기/댄스 등으로 감정을 배출하는 유산소 활동을 포함합니다.',
+                        intellectual: '### 목표: 집중력 향상 & 감정 통제 훈련\n- **매일 마음챙김 명상:** 생각과 감정을 관찰하고 판단하지 않는 훈련으로 정서적 안정감을 높입니다.\n- **감정 일기 쓰기:** 매일 오늘 느낀 감정의 원인과 대처 방식을 기록하여 감정 패턴을 파악합니다.\n- **컬러링북/간단한 퍼즐:** 높은 집중력을 요구하지 않는 활동으로 마음을 가라앉히는 훈련을 합니다.',
+                        social: '### 목표: 안전한 관계 & 정서적 지지\n- **안전한 소규모 모임:** 과도한 자극이 없는 가까운 친구와의 소규모 만남을 유지합니다.\n- **정기적 이완:** 심리 상담이나 명상 그룹 참여 등 정서적 지지와 이완을 위한 활동을 포함합니다.\n- **가족과의 조용한 활동:** 장시간 사람이 많은 곳보다 조용한 환경에서 가족과 함께 시간을 보냅니다.',
+                        risk: '### 스트레스가 혈압에 미치는 영향 모니터링\n- **매일 아침/저녁 혈압 측정:** 스트레스가 혈압에 미치는 영향을 직접 모니터링합니다.\n- **수면 및 스트레스 기록:** 수면 시간 및 스트레스 수준을 1-10점으로 매일 기록하여 감정 기복과의 연관성을 분석합니다.\n- **3개월마다 전문가 상담:** 정기적으로 의사 또는 상담사와 감정 상태와 건강을 점검합니다.',
+                    }
+                },
+                {
+                    // V열 진단: 🧠 실행 연결 불안형 (S열 최저) -> B형 루틴 적용
+                    name: '🧠 실행 연결 불안형',
+                    key: 'EXECUTION_DISCONNECT',
+                    fingerType: 'B형: 안정적 관리형',
+                    weakness: '연속성 상실 (작업 기억)',
+                    problemDetail: '님은 **계획(설계) 자체는 잘하지만**, 행동으로 옮기는 순간 **다음 단계를 잊거나** 목표를 잃어버리는 **\'계획-실행 연결 불안\'** 상태입니다. 뇌의 메모리 앵커가 약해 루틴이 쉽게 끊어집니다.',
+                    solutionDetail: '**\'기억 앵커링(Anchoring)\' 훈련**이 필요합니다. 새로운 루틴을 **기존 습관이나 장소에 강력하게 엮어** 뇌가 무의식적으로 자동 실행하도록 만드는 \'루틴 1+1 결합\' 기술을 숙달해야 합니다.',
+                    coachComment: '님의 뇌는 계획을 잊지 않도록 강한 연결고리가 필요합니다. 챌린지 2주차의 \'루틴 1+1 엮기\'가 이 문제를 해결할 핵심입니다.',
+                    routines: {
+                        food: '### 기본 원칙: 규칙적이고 간편한 식단\n- **고정 메뉴 설정:** 매일 같은 시간, 같은 메뉴를 반복하여 식습관을 자동화합니다.\n- **주말 선조리:** 주말에 일주일 분 식재료를 준비하거나 간편하게 조리하여 실행 부담을 최소화합니다.\n- **간식 고정:** 정해진 시간에만 견과류나 과일을 섭취하여 충동적 섭취를 막습니다.',
+                        move: '### 목표: 규칙적이고 반복 가능한 운동\n- **고정 시간/장소 운동:** 매일 아침 7시 등 고정된 시간에 같은 동작을 반복하여 습관으로 굳힙니다.\n- **반복 근력 운동:** 스쿼트, 벽 팔굽혀펴기 등 같은 동작을 반복하여 기억에 각인시킵니다.\n- **단순 유산소:** 빠르게 걷기나 실내 자전거 등 복잡하지 않은 루틴을 유지합니다.',
+                        intellectual: '### 목표: 부담 없는 단계적 인지 훈련\n- **짧고 반복적인 게임:** 3-5분 이내 완료 가능한 기억력 게임을 매일 같은 시간에 합니다.\n- **점진적 퍼즐:** 십자말 퍼즐이나 스도쿠 난이도를 쉬움에서 중간으로 서서히 늘려 성취감을 높입니다.\n- **루틴 기반 학습:** 독서 시간을 고정하여 습관으로 만들고, 오디오북 등을 활용해 학습 부담을 줄입니다.',
+                        social: '### 목표: 안정적인 관계 유지\n- **고정 만남:** 매주 고정된 요일과 시간에 친구나 가족과 만남을 계획하여 실행 부담을 줄입니다.\n- **체크리스트:** 주간 활동 목록에 가족/친구와의 만남을 포함하고 반드시 체크하며 실행력을 높입니다.\n- **소규모 모임:** 안정적인 관계 속에서 사회적 지지를 받습니다 (예: 봉사 동아리 정기 참여).',
+                        risk: '### 매주 월요일 오전 모니터링\n- **혈압/체중 측정 및 기록:** 매주 고정된 요일 오전에 혈압과 체중을 측정하고 기록지에 남깁니다.\n- **3개월 단위 건강검진:** 병원 방문을 3개월 단위로 계획하여 잊지 않도록 달력에 표시합니다.',
+                    }
+                },
+                {
+                    // V열 진단: 🔐 변화 저항형 (T열 최저) -> D형 루틴 적용
+                    name: '🔐 변화 저항형',
+                    key: 'CHANGE_RESISTANCE',
+                    fingerType: 'D형: 소극적 회피형',
+                    weakness: '적응 어려움 (인지 유연성)',
+                    problemDetail: '님은 **새로운 도전이나 변화에 대한 두려움**이 크며, **실패의 가능성**을 완벽하게 통제하려다 실행을 차단하는 경향이 있습니다. 익숙한 방식만 고수하여 뇌의 유연성이 떨어질 위험이 있습니다.',
+                    solutionDetail: '**\'안전한 점진적 확장\' 훈련**이 필요합니다. 집에서 혼자 할 수 있는 **부담 없는 활동**부터 시작하여, 점차적으로 난이도와 활동 반경을 넓히는 방식으로 **뇌의 유연성**을 안전하게 확장해야 합니다.',
+                    coachComment: '뇌는 안전함을 느낄 때만 성장합니다. 실패 없는 작은 성공을 반복하여 뇌에 긍정적인 경험을 쌓는 것이 핵심입니다.',
+                    routines: {
+                        food: '### 기본 원칙: 간편하고 부담 없는 홈 식단\n- **초간편 식단 활용:** 주말에 한 번에 장을 보고, 조리 시간을 최소화할 수 있는 간편식이나 에어프라이어 활용 식단을 구성합니다.\n- **배달/간편식 허용:** 주 2회까지는 건강한 배달 음식을 허용하되, 집에서 채소를 추가하는 방식으로 부담을 줄입니다.\n- **온라인 장보기:** 장보기를 온라인으로 해결하여 외부 활동에 대한 부담을 줄입니다.',
+                        move: '### 목표: 집에서 혼자 할 수 있는 운동\n- **홈 트레이닝:** 유튜브 영상을 활용한 30분 홈 트레이닝을 시작합니다. (같은 영상 반복)\n- **점진적 산책:** 익숙해지면 매일 10분씩 사람 적은 시간대에 집 근처 공원을 산책하는 것을 추가합니다.\n- **안전 확보:** 운동 중 언제든지 멈추거나 혼자만의 시간을 가질 수 있도록 탈출구를 확보합니다.',
+                        intellectual: '### 목표: 집에서 편안하게 즐기는 인지 훈련\n- **모바일 앱/종이 활동:** 루모시티 같은 뇌 훈련 앱이나 십자말 퍼즐 등 집에서 편안하게 할 수 있는 활동을 선택합니다.\n- **TV/유튜브 활용:** 퀴즈 프로그램이나 다큐멘터리를 시청하며 집에서 부담 없이 인지 자극을 받습니다.\n- **온라인 강의:** 관심 분야의 짧은 유튜브 강의를 듣는 것으로 학습을 시작합니다.',
+                        social: '### 목표: 안전하고 점진적인 사회 연결\n- **1단계: 온라인 연결:** 가족과 영상통화, 온라인 커뮤니티 댓글 소통 등 부담 없는 온라인 활동부터 시작합니다.\n- **2단계: 소규모 대면:** 가까운 가족 1~2명과 익숙한 장소에서 짧게 만나는 활동을 계획합니다.\n- **탈출구 확보:** 만남은 항상 짧은 시간으로 계획하고, 심리적으로 힘들면 언제든 자리를 뜰 수 있는 상황을 만듭니다.',
+                        risk: '### 홈 모니터링 시스템 구축\n- **자가 측정:** 가정용 혈압계와 체중계로 주 1회 혈압과 체중을 측정하고 기록합니다.\n- **온라인 건강 관리:** 건강 관리 앱을 활용하고, 원격 건강 상담을 통해 익숙하지 않은 병원 방문 횟수를 줄입니다.\n- **예약제 활용:** 정기 검진 시에는 대기 시간이 적은 예약제를 이용합니다.',
+                    }
+                }
+            ];
+
+            // 6. 차트 초기화 및 업데이트 함수
+            function initializeChart() {
+                const ctx = document.getElementById('efRadarChart').getContext('2d');
+                const efRadarChart = new Chart(ctx, {
+                    type: 'radar',
+                    data: {
+                        labels: areaLabels,
+                        datasets: [{
+                            label: '님의 현재 EF 점수 (5점 만점)',
+                            data: scores,
+                            backgroundColor: 'rgba(59, 130, 246, 0.2)', // blue-500
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            pointBackgroundColor: 'rgba(59, 130, 246, 1)',
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: 'rgba(59, 130, 246, 1)',
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            r: {
+                                angleLines: { display: true, color: 'rgba(0, 0, 0, 0.1)' },
+                                grid: { color: 'rgba(0, 0, 0, 0.1)' },
+                                suggestedMin: 1,
+                                suggestedMax: 5,
+                                pointLabels: { font: { size: 14 } },
+                                ticks: {
+                                    stepSize: 1,
+                                    backdropColor: 'rgba(255, 255, 255, 0.8)'
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    title: function(context) { return areaLabels[context[0].dataIndex]; },
+                                    label: function(context) { 
+                                        let label = context.dataset.label || '';
+                                        if (label) { label += ': '; }
+                                        label += Math.round(context.raw * 100) / 100 + '점';
+                                        return label;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // 7. 유형별 데이터 출력 및 UI 업데이트
+            function updateUI(type, minScore, weakestArea) {
+                document.getElementById('weakest-score').textContent = minScore + '점';
+                document.getElementById('weakest-area').textContent = weakestArea;
+
+                const matchedData = efData.find(d => d.name === type);
+                
+                if (matchedData) {
+                    // 해석 섹션 업데이트
+                    document.getElementById('problem-area').textContent = `문제점: ${matchedData.weakness}`;
+                    document.getElementById('problem-detail').textContent = matchedData.problemDetail;
+                    document.getElementById('solution-detail').textContent = `솔루션: ${matchedData.solutionDetail}`;
+                    document.getElementById('coach-comment').textContent = matchedData.coachComment;
+
+                    // 탭 내용 업데이트
+                    const tabContents = document.getElementById('tab-contents');
+                    ['food', 'move', 'intellectual', 'social', 'risk'].forEach(area => {
+                        const contentDiv = document.getElementById(area);
+                        // Markdown to simple HTML conversion (paragraphs assumed)
+                        let htmlContent = `<h4 class="text-xl font-bold mb-3 text-blue-600">${matchedData.fingerType} 루틴 목표</h4>`;
+                        htmlContent += matchedData.routines[area].split('\n').map(line => {
+                            if (line.startsWith('###')) return `<h5 class="text-lg font-semibold mt-4 mb-2">${line.replace('###', '').trim()}</h5>`;
+                            if (line.startsWith('✅')) return `<p class="flex items-start mt-1 text-gray-700"><span class="mr-2 text-green-500 text-xl">✅</span>${line.replace('✅', '').trim()}</p>`;
+                            if (line.startsWith('-')) return `<li class="text-gray-700 ml-5 list-disc">${line.replace('-', '').trim()}</li>`;
+                            return `<p class="mt-2 text-gray-700">${line.trim()}</p>`;
+                        }).join('');
+                        contentDiv.innerHTML = htmlContent;
+                    });
+                    
+                } else {
+                    document.getElementById('interpretation-box').innerHTML = '<p class="text-red-500">URL 데이터가 유효하지 않아 기본 분석만 제공됩니다.</p>';
+                    document.getElementById('tab-contents').innerHTML = '<p class="text-red-500">분석을 위해 유효한 EF 점수 데이터가 필요합니다.</p>';
+                }
+                
+                initializeChart(); // 차트 초기화는 데이터 업데이트 후 실행
+            }
+
+            // 8. 탭 기능 활성화
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            function showTab(tabId) {
+                tabContents.forEach(content => {
+                    content.classList.add('hidden');
+                });
+                tabButtons.forEach(button => {
+                    button.classList.remove('bg-blue-600', 'text-white');
+                    button.classList.add('bg-white', 'text-gray-700');
+                });
+
+                document.getElementById(tabId).classList.remove('hidden');
+                document.querySelector(`[data-tab="${tabId}"]`).classList.add('bg-blue-600', 'text-white');
+                document.querySelector(`[data-tab="${tabId}"]`).classList.remove('bg-white', 'text-gray-700');
+            }
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    showTab(this.dataset.tab);
+                });
+            });
+
+            // 초기 로딩 시 첫 번째 탭 표시
+            showTab('food');
+
+            // 최종 UI 업데이트 실행
+            updateUI(type, minScore, weakestArea);
+        });
+    </script>
+</body>
+</html>
+l…]()
