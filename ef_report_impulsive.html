@@ -1,0 +1,390 @@
+<!-- Chosen Palette: Teal (#00BCD4), Warm Grey (#F5F5F5), Accent Orange (#FF5722), Success Green (#4CAF50) -->
+<!-- Application Structure Plan: The SPA is designed as a dynamic, single-page report based on FINGER/EF model. It uses a dashboard approach with thematic tabs (FINGER 5 areas) to break down the dense routine information. The flow is: [Personalized Diagnosis] -> [Interactive Radar Chart] -> [Tabbed FINGER Routines (Content)] -> [Final CTA]. This structure separates diagnosis from solution, enhancing user focus and encouraging exploration of the customized routine. -->
+<!-- Visualization & Content Choices: Radar Chart (Chart.js) shows EF strengths/weaknesses dynamically based on URL params (r,s,t,u). This is CRITICAL for personalization. Tabbed Interface (HTML/JS) dynamically updates FINGER routine content based on the diagnosed 'key' (EMOTIONAL, MEMORY, FLEXIBILITY) from the URL, ensuring tailored recommendations. NO SVG/Mermaid. -->
+<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>뇌 실행력(EF) 진단 리포트</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f5f5f5; }
+        .chart-container { position: relative; width: 100%; max-width: 400px; margin: 0 auto; height: 350px; max-height: 400px; }
+        @media (min-width: 768px) { .chart-container { max-width: 500px; } }
+        .tab-button { transition: all 0.2s ease-in-out; min-width: 25%; }
+        .tab-button.active { background-color: #00bcd4; color: white; border-bottom: 2px solid #00bcd4; }
+    </style>
+</head>
+<body class="antialiased">
+    <div id="app" class="min-h-screen">
+        <!-- Header & Title -->
+        <header class="bg-teal-500 py-6 shadow-lg">
+            <div class="container mx-auto px-4 text-center">
+                <h1 id="report-title" class="text-3xl font-extrabold text-white">
+                    뇌 실행력(EF) 진단 리포트
+                </h1>
+                <p class="mt-2 text-lg text-teal-100" id="diagnosis-header">
+                    브레인 가든 정원쌤이 분석한 님의 맞춤 EF 프로필입니다.
+                </p>
+            </div>
+        </header>
+
+        <!-- Main Content Container -->
+        <main class="container mx-auto px-4 py-8">
+            <!-- 1. Diagnosis Summary -->
+            <section id="profile-summary" class="mb-8">
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-teal-100">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">님의 뇌는 <span id="final-diagnosis" class="text-teal-600">유형 분석 중</span>으로 진단되었습니다.</h2>
+                    
+                    <div id="profile-data-display" class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center mt-6">
+                        <div class="p-3 bg-red-50 rounded-lg shadow">
+                            <p class="text-xs text-red-500 font-semibold uppercase">가장 취약한 EF 점수</p>
+                            <p class="text-3xl font-extrabold text-red-600 mt-1" id="weakest-score">4점</p>
+                        </div>
+                        <div class="p-3 bg-yellow-50 rounded-lg shadow">
+                            <p class="text-xs text-yellow-600 font-semibold uppercase">가장 취약한 EF 영역</p>
+                            <p class="text-xl font-bold text-yellow-700 mt-1" id="weakest-area">작업 기억</p>
+                        </div>
+                        <div class="p-3 bg-blue-50 rounded-lg shadow">
+                            <p class="text-xs text-blue-600 font-semibold uppercase">EF 진단 유형</p>
+                            <p class="text-xl font-bold text-blue-700 mt-1" id="diagnosis-type-name">유형 분석 중</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. Profile and Interpretation -->
+            <section id="profile-interpretation" class="mb-10 grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+                    <h3 class="text-xl font-bold mb-3 text-gray-700">EF 프로필 레이더 분석</h3>
+                    <p class="text-sm text-gray-500 mb-4">4가지 핵심 영역의 상대적인 강도를 시각화했습니다. 점수가 낮을수록 개선을 통해 집중적으로 개선해야 할 영역입니다.</p>
+                    <div class="chart-container">
+                        <canvas id="efRadarChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+                    <h3 class="text-xl font-bold mb-3 text-gray-700">진단 유형별 핵심 해석</h3>
+                    <div id="diagnosis-interpretation" class="mt-4 space-y-4">
+                        <div id="error-message" class="p-3 bg-red-100 text-red-700 rounded-lg font-semibold hidden">
+                            분석을 위해 유효한 EF 점수 데이터가 필요합니다.
+                        </div>
+
+                        <div id="coach-comment" class="p-4 bg-yellow-50 border-l-4 border-yellow-500 rounded-lg">
+                            <p class="font-bold text-yellow-800">⭐ 코치 COMMENT</p>
+                            <p class="text-sm text-gray-700 mt-1" id="coach-text">EF는 훈련을 통해 강력히 강화될 수 있습니다. 님의 강점을 활용하여 약점을 극복하는 맞춤 전략이 필요합니다.</p>
+                        </div>
+
+                        <div id="weakness-interpretation" class="text-gray-700">
+                            <!-- JS will inject personalized weakness analysis here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. FINGER Custom Routine -->
+            <section id="routine-plan" class="mb-10">
+                <h2 class="text-2xl font-extrabold text-teal-700 mb-5 border-b-2 pb-2">유형별 FINGER 맞춤 루틴 목표</h2>
+                <p class="text-gray-600 mb-5">진단된 EF 유형에 맞춰, 치매 예방의 국제 표준인 FINGER 모델 기반의 5대 영역별 **핵심 루틴 목표**를 제시합니다. 챌린지에서는 이 목표를 달성할 **"4주 실행 스케줄"**을 제공합니다.</p>
+                
+                <div class="bg-white rounded-xl shadow-xl overflow-hidden">
+                    <!-- Tab Buttons -->
+                    <div id="routine-tabs" class="flex justify-between border-b bg-gray-50 p-2">
+                        <!-- Buttons injected by JS based on efData -->
+                    </div>
+                    
+                    <!-- Tab Content -->
+                    <div id="routine-content" class="p-6">
+                        <div id="routine-error" class="p-4 bg-red-100 text-red-700 rounded-lg font-semibold hidden">
+                            분석을 위해 유효한 EF 점수 데이터가 필요합니다.
+                        </div>
+                        <div id="routine-details">
+                            <!-- Routine details injected by JS -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. Disclaimer -->
+            <section id="disclaimer" class="mb-8">
+                <div class="p-4 bg-yellow-50 border-l-4 border-yellow-500 rounded-lg text-sm text-gray-700">
+                    <h4 class="font-bold text-red-600 mb-2">⚠️ 진단 테스트 유의사항 및 면책 고지</h4>
+                    <p class="mb-1">
+                        <strong>1. 진단 목적의 한계:</strong> 본 테스트 결과는 의학적인 진단, 치료, 또는 전문가의 소견을 대체할 수 없습니다. 만약 심각한 인지적 어려움이나 정서적 문제가 의심되는 경우, 반드시 전문 의료기관을 방문하시기 바랍니다.
+                    </p>
+                    <p class="mb-1">
+                        <strong>2. 데이터 기반 분석:</strong> 본 리포트는 응답하신 12개 문항의 EF 영역별 점수를 기반으로 '가장 취약한 행동 패턴'을 진단하여 유형을 분류합니다. 따라서 개인의 주관적인 컨디션이나 복합적인 심리적 요인이 모두 반영되지 않을 수 있습니다. (⚡️ 심화 유료 버전은 더 자세한 문항과 전화 상담으로 보다 섬세하게 반영됩니다.)
+                    </p>
+                    <p class="mb-1">
+                        <strong>3. 정보의 활용:</strong> 리포트에 제시된 FINGER 루틴 및 코칭 메시지는 건강한 습관 형성을 위한 가이드라인이며, 이를 무단으로 활용하여 발생하는 결과에 대해 브레인 가든은 법적 책임을 지지 않습니다.
+                    </p>
+                    <p class="mt-3 font-bold text-teal-700">
+                        본 무료 테스트는 이메일 주소당 단 한 번의 결과만을 제공합니다. 정확한 진단을 위해 신중하게 답변해 주십시오.
+                    </p>
+                </div>
+            </section>
+
+            <!-- 5. Final CTA -->
+            <section id="final-cta" class="bg-teal-600 p-8 rounded-xl shadow-2xl text-center text-white">
+                <h2 class="text-3xl font-extrabold mb-4">님의 진단 결과를 '평생 습관'으로 바꾸세요!</h2>
+                <p class="text-lg mb-6">무료 진단은 시작일 뿐입니다. **4주 챌린지**를 통해 님의 유형에 딱 맞는 **"실행력이 작동하는 4주 스케줄"**을 완성하세요.</p>
+                <!-- NOTE: URL 링크를 고객님이 제공한 최신 블로그 주소로 업데이트합니다. -->
+                <a href="https://blog.naver.com/brain_garden/224047447360" class="inline-block bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-6 rounded-lg shadow-xl transition duration-300 transform hover:scale-105">
+                    4주 챌린지 실행 스케줄 확인 및 등록하기
+                </a>
+            </section>
+        </main>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // EF Data and Routine Definition (Simulating a database)
+        const efData = [
+            {
+                key: 'EMOTIONAL',
+                name: '⚡️ 감정적 미루기형',
+                weakness: '억제 통제',
+                explanation: '님의 문제는 "실행 순간의 불안, 두려움"과 같은 감정적 충동에 굴복하여 행동을 미루는 것입니다. 훌륭한 계획을 세워도 심리적 에너지가 소진되어 첫걸음을 멈춥니다. 뇌의 브레이크 훈련이 필요합니다.',
+                routines: {
+                    식단: '소량 다빈도, 저혈당지수(Low GI) 식단으로 혈당을 안정화하여 감정 기복을 최소화합니다. 특히 트립토판과 마그네슘이 풍부한 식품(닭가슴살, 견과류)을 섭취하여 기분 안정에 집중합니다.',
+                    신체활동: '스트레스를 즉시 해소할 수 있는 짧은 마음챙김 운동(명상, 호흡법)을 루틴에 포함합니다. 격렬한 운동 대신 요가, 태극권 등 이완 운동을 통해 정서적 안정을 우선합니다.',
+                    인지활동: '집중력을 향상시키는 짧은 마인드풀니스 명상을 루틴에 포함합니다. 복잡한 인지 과제는 피하고, 짧고 성취감을 느낄 수 있는 게임이나 컬러링북으로 뇌의 부담을 줄입니다.',
+                    사회활동: '갈등과 자극을 피하는 안전하고 소규모의 관계를 유지합니다. 가족, 친구와 감정을 공유하는 모임을 주 1회 가지며, 정서적 지지 시스템을 구축합니다.',
+                    위험요인관리: '매일 아침/저녁 혈압과 스트레스 수준(1~10점)을 기록하여 감정 변화와 신체 반응의 연관성을 모니터링하고, 만성 스트레스 관리에 집중합니다.'
+                }
+            },
+            {
+                key: 'MEMORY',
+                name: '🧠 실행 연결 불안형',
+                weakness: '작업 기억',
+                explanation: '님은 계획(설계)은 잘하지만, 실행 단계에서 "다음 순서"나 "목표"를 순간적으로 놓쳐 실행 연결이 끊깁니다. 뇌의 메모장 용량이 작아 중요한 정보를 유지하고 조작하는 데 어려움을 겪습니다.',
+                routines: {
+                    식단: '오메가-3, 콜린 등 뇌 신경세포에 필수적인 영양소가 풍부한 등푸른 생선과 달걀을 매일 섭취합니다. 뇌 기능을 최대화하기 위해 규칙적이고 반복적인 식사 시간을 유지합니다.',
+                    신체활동: '운동과 인지 과제를 결합하는 "듀얼태스크(Dual-Task)" 훈련을 반드시 실시합니다. (예: 걷기와 7의 배수 거꾸로 세기를 동시에 진행) 이는 작업 기억과 실행력을 동시에 강화합니다.',
+                    인지활동: 'N-back 게임, 단어 역순 외우기 등 작업 기억 용량을 늘리는 훈련을 집중적으로 합니다. 모든 계획을 시각적인 목록(체크리스트)으로 작성하여 뇌의 부담을 줄입니다.',
+                    사회활동: '새로운 사람을 만나는 것보다 익숙한 사람들과의 관계를 유지하며 안정감을 찾습니다. 대화 시 들은 내용을 요약하여 말하는 훈련을 통해 작업 기억을 활용합니다.',
+                    위험요인관리: '규칙적인 수면 패턴을 유지하고 수면의 질을 관리합니다. 수면은 작업 기억을 정리하고 강화하는 가장 중요한 시간입니다.'
+                }
+            },
+            {
+                key: 'FLEXIBILITY',
+                name: '🔐 변화 저항형',
+                weakness: '인지 유연성',
+                explanation: '님은 새로운 상황이나 방식에 대한 심리적 저항이 매우 강합니다. 완벽주의 성향과 결합하여 작은 실수나 변화를 두려워하며, 이것이 새로운 루틴 시작을 막는 장애물이 됩니다.',
+                routines: {
+                    식단: '매주 한 번씩 낯선 나라의 건강 레시피를 시도합니다. 이는 뇌에 새로운 자극과 유연성을 제공합니다. 평소 먹지 않던 컬러의 채소(보라색, 노란색)를 의도적으로 추가합니다.',
+                    신체활동: '익숙한 경로를 벗어나 새로운 길로 산책하거나, 댄스나 에어로빅처럼 복잡하고 빠른 동작을 요구하는 활동을 시도하여 뇌의 전환 스위치를 훈련합니다.',
+                    인지활동: '전략 게임(체스, 바둑)을 하되, "반드시 이겨야 한다"는 부담을 버리고 "새로운 전략을 시도"하는 것에 초점을 맞춥니다. 문제 해결 시 여러 가지 관점으로 보는 하브루타 토론을 시도합니다.',
+                    사회활동: '새로운 분야의 동호회나 모임에 가입하여 낯선 사람들과 소통합니다. 멘토링 활동 등을 통해 자신의 경험을 다른 관점에서 바라보는 기회를 가집니다.',
+                    위험요인관리: '과도한 목표 설정을 피하고, "완벽하지 않아도 괜찮다"는 마음가짐을 갖습니다. 매주 작은 목표를 설정하고 달성하며 뇌의 변화 저항을 점진적으로 해체합니다.'
+                }
+            }
+        ];
+
+        let efScores = [3, 3, 3, 3]; // Default scores
+        let weakestAreaKey = 'MEMORY';
+        let weakestAreaName = '작업 기억';
+        let userName = '';
+        let diagnosedType = efData[1]; // Default to MEMORY type
+
+        // --- 1. URL 파라미터 읽기 및 데이터 검증 ---
+        function getUrlParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            // 이름 디코딩 및 설정
+            const nameParam = urlParams.get('n');
+            if (nameParam) {
+                userName = decodeURIComponent(nameParam.replace(/\+/g, ' '));
+                document.getElementById('report-title').innerHTML = `${userName}님을 위한 뇌 실행력(EF) 진단 리포트`;
+                document.getElementById('diagnosis-header').textContent = `브레인 가든 정원쌤이 분석한 ${userName}님의 맞춤 EF 프로필입니다.`;
+            } else {
+                userName = 'OOO';
+            }
+
+            // 점수 및 키 검증
+            const r = parseFloat(urlParams.get('r'));
+            const s = parseFloat(urlParams.get('s'));
+            const t = parseFloat(urlParams.get('t'));
+            const u = parseFloat(urlParams.get('u'));
+            const key = urlParams.get('key');
+            
+            // 데이터 유효성 검사 (점수가 NaN이 아니며 1.0 이상인 경우만 유효)
+            // if (r >= 1 && s >= 1 && t >= 1 && u >= 1) 대신 isValidData 변수 사용
+            const isValidData = !isNaN(r) && !isNaN(s) && !isNaN(t) && !isNaN(u) && r >= 1 && s >= 1 && t >= 1 && u >= 1;
+
+            if (isValidData && key) {
+                // 데이터 유효: 점수 및 키 적용
+                // 주의: URL 순서: r, s, t, u
+                // 차트 순서: 억제(r), 계획(u), 유연성(t), 기억(s)
+                efScores = [r, u, t, s]; 
+                weakestAreaKey = key;
+
+                // 최저점 및 유형 찾기
+                const scoreMap = { 'EMOTIONAL': r, 'MEMORY': s, 'FLEXIBILITY': t, 'PLANNING': u };
+                let minScore = 5.0;
+                let weakestKey = '';
+
+                // 최저점과 그 이름을 찾습니다.
+                Object.keys(scoreMap).forEach(k => {
+                    // 최저점 업데이트 (동점일 경우 마지막 키가 선택됨)
+                    if (scoreMap[k] <= minScore) { 
+                        minScore = scoreMap[k];
+                        weakestKey = k;
+                    }
+                });
+                
+                // 진단된 유형 찾기 (최저점 영역 기준)
+                // V열에서 가져온 key를 efData에서 찾습니다.
+                diagnosedType = efData.find(d => d.key === key); 
+                
+                // key를 찾지 못했거나 유효하지 않으면 EMOTIONAL로 fallback
+                if (!diagnosedType) {
+                    diagnosedType = efData[0]; // Fallback to EMOTIONAL
+                    // console.error(`Error: Key "${key}" not found. Falling back.`);
+                }
+
+                document.getElementById('weakest-score').textContent = minScore.toFixed(2) + '점';
+                document.getElementById('weakest-area').textContent = getAreaName(weakestKey); // 최저점 영역 이름은 minKey 기준
+                document.getElementById('diagnosis-type-name').textContent = diagnosedType.name;
+                document.getElementById('final-diagnosis').textContent = diagnosedType.name;
+
+                // 데이터 표가 정상적으로 나오게 설정
+                document.getElementById('profile-data-display').style.display = 'grid'; 
+
+                // 오류 메시지 숨기기
+                document.getElementById('error-message').classList.add('hidden');
+                document.getElementById('routine-error').classList.add('hidden');
+
+
+                // Weakness Interpretation Injection
+                const weaknessInterpretation = document.getElementById('weakness-interpretation');
+                weaknessInterpretation.innerHTML = `
+                    <p class="font-semibold text-gray-800">진단 요약:</p>
+                    <p class="text-sm mt-1">${diagnosedType.explanation}</p>
+                `;
+
+
+                return true;
+            } else {
+                // 데이터 무효: 오류 메시지 표시
+                document.getElementById('error-message').classList.remove('hidden');
+                document.getElementById('routine-error').classList.remove('hidden');
+                
+                document.getElementById('weakest-score').textContent = '분석 중';
+                document.getElementById('weakest-area').textContent = '분석 중';
+                document.getElementById('diagnosis-type-name').textContent = '분석 중';
+                document.getElementById('final-diagnosis').textContent = '유형 분석 중';
+                document.getElementById('profile-data-display').style.display = 'none'; // 데이터 창 숨기기
+                document.getElementById('weakness-interpretation').innerHTML = `<p class="text-red-600 font-semibold mt-2">URL 데이터가 유효하지 않아 기본 분석만 제공됩니다.</p>`;
+                return false;
+            }
+        }
+
+        function getAreaName(key) {
+            switch (key) {
+                case 'EMOTIONAL': return '억제 통제';
+                case 'MEMORY': return '작업 기억';
+                case 'FLEXIBILITY': return '인지 유연성';
+                case 'PLANNING': return '계획/조직';
+                default: return '미정';
+            }
+        }
+
+        // --- 2. Chart Drawing ---
+        function drawRadarChart() {
+            const ctx = document.getElementById('efRadarChart').getContext('2d');
+
+            // 점수 역산 (높은 점수가 바깥으로 가도록 5점 만점에서 역산)
+            const chartData = efScores.map(score => score); 
+
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['억제 통제', '계획/조직', '인지 유연성', '작업 기억'],
+                    datasets: [{
+                        label: '나의 EF 프로필',
+                        data: chartData,
+                        backgroundColor: 'rgba(0, 188, 212, 0.2)', // Teal 400
+                        borderColor: 'rgba(0, 188, 212, 1)',
+                        pointBackgroundColor: 'rgba(255, 87, 34, 1)', // Orange accent
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(255, 87, 34, 1)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(150, 150, 150, 0.4)' },
+                            grid: { color: 'rgba(150, 150, 150, 0.4)' },
+                            suggestedMin: 1,
+                            suggestedMax: 5,
+                            ticks: { display: false, stepSize: 1 },
+                            pointLabels: {
+                                font: { size: 12, weight: 'bold' },
+                                color: '#333'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: (context) => `${context.dataset.label}: ${context.raw.toFixed(2)}점` } }
+                    }
+                }
+            });
+        }
+
+        // --- 3. Routine Content Injection ---
+        function injectRoutineContent(type) {
+            document.getElementById('coach-text').textContent = type.explanation;
+
+            const tabsContainer = document.getElementById('routine-tabs');
+            const contentContainer = document.getElementById('routine-details');
+            tabsContainer.innerHTML = '';
+            contentContainer.innerHTML = '';
+            
+            let firstKey = '';
+
+            Object.keys(type.routines).forEach((key, index) => {
+                if (index === 0) firstKey = key;
+                
+                const button = document.createElement('button');
+                button.className = `tab-button px-4 py-2 text-sm font-semibold rounded-t-lg transition duration-150 ease-in-out hover:bg-teal-100 ${index === 0 ? 'active' : ''}`;
+                button.textContent = key;
+                button.setAttribute('data-target', key);
+                
+                button.onclick = () => {
+                    // Remove active class from all buttons
+                    document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                    // Add active class to the clicked button
+                    button.classList.add('active');
+                    // Update content
+                    contentContainer.innerHTML = `<p class="text-gray-700">${type.routines[key]}</p>`;
+                };
+                tabsContainer.appendChild(button);
+            });
+
+            // Initial content display
+            if (firstKey) {
+                contentContainer.innerHTML = `<p class="text-gray-700">${type.routines[firstKey]}</p>`;
+            }
+        }
+
+
+        // --- Main Execution ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const dataIsValid = getUrlParams();
+            
+            if (dataIsValid) {
+                drawRadarChart();
+                injectRoutineContent(diagnosedType);
+            }
+        });
+    </script>
+</body>
+</html>
